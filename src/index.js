@@ -7,7 +7,7 @@ const db         = require('./config/db');
 
 const app = express();
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: 'https://tu-proyecto.vercel.app', // ← pon tu URL de Vercel aquí
   credentials: true,
 }))
 app.use(express.json());
