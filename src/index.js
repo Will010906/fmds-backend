@@ -7,7 +7,10 @@ const db         = require('./config/db');
 
 const app = express();
 app.use(cors({
-  origin: 'https://tu-proyecto.vercel.app', // ← pon tu URL de Vercel aquí
+  origin: [
+    'https://fmds-frontend.vercel.app',
+    'http://localhost:5173'
+  ],
   credentials: true,
 }))
 app.use(express.json());
