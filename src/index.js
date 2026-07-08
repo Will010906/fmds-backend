@@ -7,12 +7,11 @@ const db         = require('./config/db');
 
 const app = express();
 app.use(cors({
-  origin: [
-    'https://fmds-frontend.vercel.app',
-    'http://localhost:5173'
-  ],
-  credentials: true,
+  origin: '*',
+  credentials: false,
 }))
+
+
 app.use(express.json());
 
 // Rutas
@@ -35,6 +34,9 @@ app.use('/api/eventos', eventoRoutes);
 
 const articuloRoutes = require('./routes/articuloRoutes');
 app.use('/api/articulos', articuloRoutes);
+
+const speakerRoutes = require('./routes/speakerRoutes');
+app.use('/api/speakers', speakerRoutes);
 
 const transaccionRoutes = require('./routes/transaccionRoutes');
 app.use('/api/transacciones', transaccionRoutes);
