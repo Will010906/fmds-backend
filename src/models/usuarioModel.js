@@ -24,4 +24,24 @@ const create = async (nombre, correo, hashedPassword, rol = 'Usuario General') =
   return result.insertId;
 };
 
-module.exports = { findByCorreo, findById, create };
+const getAll = async () => {
+  const [rows] = await db.query(
+    'SELECT idUsuario, nombre, correo, rol FROM usuario ORDER BY idUsuario ASC'
+  );
+  return rows;
+};
+
+const updateRol = async (id, rol) => {
+  const [result] = await db.query(
+    'UPDATE usuario SET rol = ? WHERE idUsuario = ?',
+    [rol, id]
+  );
+  return result.affectedRows;
+};
+
+const remove = async (id) => {
+  const [result] = await db.query('DELETE FROM usuario WHERE idUsuario = ?', [id]);
+  return result.affectedRows;
+};
+
+module.exports = { findByCorreo, findById, create, getAll, updateRol, remove };

@@ -11,21 +11,21 @@ const getById = async (id) => {
 };
 
 const createSpeaker = async (datos) => {
-  const { nombre, rol, area, tema, frase, featured } = datos;
+  const { nombre, rol, area, tema, frase, featured, fotoUrl } = datos;
   const [result] = await db.query(
-    `INSERT INTO speaker (nombre, rol, area, tema, frase, featured)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [nombre, rol, area, tema, frase || null, featured ? 1 : 0]
+    `INSERT INTO speaker (nombre, rol, area, tema, frase, featured, fotoUrl)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [nombre, rol, area, tema, frase || null, featured ? 1 : 0, fotoUrl || null]
   );
   return result.insertId;
 };
 
 const update = async (id, datos) => {
-  const { nombre, rol, area, tema, frase, featured } = datos;
+  const { nombre, rol, area, tema, frase, featured, fotoUrl } = datos;
   const [result] = await db.query(
-    `UPDATE speaker SET nombre=?, rol=?, area=?, tema=?, frase=?, featured=?
+    `UPDATE speaker SET nombre=?, rol=?, area=?, tema=?, frase=?, featured=?, fotoUrl=?
      WHERE idSpeaker=?`,
-    [nombre, rol, area, tema, frase || null, featured ? 1 : 0, id]
+    [nombre, rol, area, tema, frase || null, featured ? 1 : 0, fotoUrl || null, id]
   );
   return result.affectedRows;
 };

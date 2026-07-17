@@ -38,6 +38,12 @@ app.use('/api/articulos', articuloRoutes);
 const speakerRoutes = require('./routes/speakerRoutes');
 app.use('/api/speakers', speakerRoutes);
 
+const usuarioRoutes = require('./routes/usuarioRoutes');
+app.use('/api/usuarios', usuarioRoutes);
+
+const suscriptorRoutes = require('./routes/suscriptorRoutes');
+app.use('/api/suscriptores', suscriptorRoutes);
+
 const transaccionRoutes = require('./routes/transaccionRoutes');
 app.use('/api/transacciones', transaccionRoutes);
 
