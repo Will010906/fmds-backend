@@ -64,7 +64,19 @@ const registro = async (req, res) => {
     const hash = await bcrypt.hash(contrasenia, 10);
     const id   = await Usuario.create(nombre, correo, hash, rol);
 
-    res.status(201).json({ message: 'Usuario creado', id });
+    // Generar JWT para dejarlo con sesión iniciada de inmediato
+    const rolFinal = rol || 'Usuario General';
+    const token = jwt.sign(
+      { id, rol: rolFinal },
+      process.env.JWT_SECRET,
+      { expiresIn: '8h' }
+    );
+
+    res.status(201).json({
+      message: 'Usuario creado',
+      token,
+      usuario: { id, nombre, correo, rol: rolFinal },
+    });
 
   } catch (err) {
     console.error(err);

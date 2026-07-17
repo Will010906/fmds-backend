@@ -1,5 +1,6 @@
 const axios = require('axios');
 const Transaccion = require('../models/transaccionModel');
+const Usuario = require('../models/usuarioModel');
 
 const checkout = async (req, res) => {
   const { token_id, idEvento, cantidad, montoTotal, deviceSessionId } = req.body;
@@ -10,6 +11,11 @@ const checkout = async (req, res) => {
   }
 
   try {
+    const usuario = await Usuario.findById(idUsuario);
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
     const merchantId = process.env.OPENPAY_MERCHANT_ID;
     const privateKey = process.env.OPENPAY_PRIVATE_KEY;
     const url = `https://sandbox-api.openpay.mx/v1/${merchantId}/charges`;
@@ -22,8 +28,8 @@ const checkout = async (req, res) => {
       description: `Boletos FMDS - Evento ${idEvento}`,
       device_session_id: deviceSessionId,
       customer: {
-        name: 'Usuario FMDS',
-        email: 'usuario@fmds.mx',
+        name: usuario.nombre,
+        email: usuario.correo,
       },
     }, {
       auth: {
