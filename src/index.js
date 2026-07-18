@@ -44,6 +44,12 @@ app.use('/api/usuarios', usuarioRoutes);
 const suscriptorRoutes = require('./routes/suscriptorRoutes');
 app.use('/api/suscriptores', suscriptorRoutes);
 
+const sesionRoutes = require('./routes/sesionRoutes');
+app.use('/api/sesiones', sesionRoutes);
+
+const cursoRoutes = require('./routes/cursoRoutes');
+app.use('/api/cursos', cursoRoutes);
+
 const transaccionRoutes = require('./routes/transaccionRoutes');
 app.use('/api/transacciones', transaccionRoutes);
 
