@@ -24,4 +24,20 @@ const soloAdmin = (req, res, next) => {
   next();
 };
 
-module.exports = { verificarToken, soloAdmin };
+// Adjunta req.usuario si hay token válido, pero no rechaza si falta
+// (para rutas que aceptan tanto usuarios con sesión como invitados).
+const tokenOpcional = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token) {
+    try {
+      req.usuario = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+      // token inválido o expirado: se continúa como invitado
+    }
+  }
+  next();
+};
+
+module.exports = { verificarToken, soloAdmin, tokenOpcional };

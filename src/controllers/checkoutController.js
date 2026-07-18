@@ -1,19 +1,36 @@
 const axios = require('axios');
+const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const Transaccion = require('../models/transaccionModel');
 const Usuario = require('../models/usuarioModel');
 
 const checkout = async (req, res) => {
-  const { token_id, idEvento, cantidad, montoTotal, deviceSessionId } = req.body;
-  const idUsuario = req.usuario.id;
+  const { token_id, idEvento, cantidad, montoTotal, deviceSessionId, nombre, correo } = req.body;
 
   if (!token_id || !idEvento || !cantidad || !montoTotal) {
     return res.status(400).json({ error: 'Faltan datos requeridos' });
   }
 
   try {
-    const usuario = await Usuario.findById(idUsuario);
-    if (!usuario) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
+    let usuario;
+
+    if (req.usuario) {
+      // Compra con sesión iniciada
+      usuario = await Usuario.findById(req.usuario.id);
+      if (!usuario) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
+    } else {
+      // Compra como invitado: se liga a una cuenta invitada por correo
+      if (!nombre || !correo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+        return res.status(400).json({ error: 'Nombre y correo válido son requeridos para comprar' });
+      }
+      usuario = await Usuario.findByCorreo(correo.toLowerCase().trim());
+      if (!usuario) {
+        const hash = await bcrypt.hash(crypto.randomUUID(), 10);
+        const id = await Usuario.create(nombre.trim(), correo.toLowerCase().trim(), hash, 'Usuario General', 1);
+        usuario = { idUsuario: id, nombre: nombre.trim(), correo: correo.toLowerCase().trim() };
+      }
     }
 
     const merchantId = process.env.OPENPAY_MERCHANT_ID;
@@ -39,7 +56,7 @@ const checkout = async (req, res) => {
     });
 
     const idTransaccion = await Transaccion.createTransaccion(
-      idUsuario,
+      usuario.idUsuario,
       montoTotal,
       [{ idEvento, cantidad }]
     );

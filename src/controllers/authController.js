@@ -56,13 +56,21 @@ const registro = async (req, res) => {
   try {
     // Verificar si ya existe
     const existe = await Usuario.findByCorreo(correo);
-    if (existe) {
+    if (existe && !existe.esInvitado) {
       return res.status(409).json({ error: 'El correo ya está registrado' });
     }
 
     // Hashear contraseña
     const hash = await bcrypt.hash(contrasenia, 10);
-    const id   = await Usuario.create(nombre, correo, hash, rol);
+    let id;
+    if (existe) {
+      // Reclamar cuenta invitada (creada al comprar sin registro):
+      // conserva su historial de compras
+      await Usuario.convertirInvitado(existe.idUsuario, nombre, hash);
+      id = existe.idUsuario;
+    } else {
+      id = await Usuario.create(nombre, correo, hash, rol);
+    }
 
     // Generar JWT para dejarlo con sesión iniciada de inmediato
     const rolFinal = rol || 'Usuario General';
