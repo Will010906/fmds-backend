@@ -13,7 +13,8 @@ const verificarToken = (req, res, next) => {
     req.usuario = decoded; // { id, rol }
     next();
   } catch (err) {
-    return res.status(403).json({ error: 'Token inválido o expirado' });
+    // 401 = sesión no válida (el frontend cierra sesión); 403 se reserva para falta de rol
+    return res.status(401).json({ error: 'Token inválido o expirado' });
   }
 };
 
