@@ -20,6 +20,16 @@ const obtener = async (req, res) => {
   }
 };
 
+const misCompras = async (req, res) => {
+  try {
+    const compras = await Transaccion.getByUsuario(req.usuario.id);
+    res.json(compras);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener tus boletos' });
+  }
+};
+
 const crear = async (req, res) => {
   const { montoTotal, detalles } = req.body;
   const idUsuario = req.usuario.id;
@@ -37,4 +47,4 @@ const crear = async (req, res) => {
   }
 };
 
-module.exports = { listar, obtener, crear };
+module.exports = { listar, obtener, crear, misCompras };

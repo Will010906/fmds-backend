@@ -35,6 +35,38 @@ const getById = async (id) => {
   return { ...transaccion[0], detalles };
 };
 
+const getByUsuario = async (idUsuario) => {
+  const [rows] = await db.query(
+    `SELECT t.idTransaccion, t.fechaPago, t.montoTotal,
+            dc.cantidad, e.titulo, e.fecha AS fechaEvento
+     FROM transaccion t
+     JOIN detalle_compra dc ON dc.idTransaccion = t.idTransaccion
+     JOIN evento e ON e.idEvento = dc.idEvento
+     WHERE t.idUsuario = ?
+     ORDER BY t.fechaPago DESC`,
+    [idUsuario]
+  );
+
+  // Una transacción puede tener varios eventos: se agrupan por folio
+  const porFolio = new Map();
+  for (const fila of rows) {
+    if (!porFolio.has(fila.idTransaccion)) {
+      porFolio.set(fila.idTransaccion, {
+        idTransaccion: fila.idTransaccion,
+        fechaPago: fila.fechaPago,
+        montoTotal: fila.montoTotal,
+        detalles: [],
+      });
+    }
+    porFolio.get(fila.idTransaccion).detalles.push({
+      titulo: fila.titulo,
+      fechaEvento: fila.fechaEvento,
+      cantidad: fila.cantidad,
+    });
+  }
+  return [...porFolio.values()];
+};
+
 const createTransaccion = async (idUsuario, montoTotal, detalles) => {
   const conn = await db.getConnection();
   try {
@@ -72,4 +104,4 @@ const createTransaccion = async (idUsuario, montoTotal, detalles) => {
   }
 };
 
-module.exports = { getAll, getById, createTransaccion };
+module.exports = { getAll, getById, getByUsuario, createTransaccion };
