@@ -1,11 +1,15 @@
 const express    = require('express');
 const cors       = require('cors');
+const helmet     = require('helmet');
+const rateLimit  = require('express-rate-limit');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
 const db         = require('./config/db');
 
 const app = express();
+app.set('trust proxy', 1); // Railway corre detrás de un proxy
+app.use(helmet());
 app.use(cors({
   origin: '*',
   credentials: false,
@@ -14,7 +18,17 @@ app.use(cors({
 
 app.use(express.json());
 
+// Máximo 10 intentos de login por IP cada 15 minutos (contra fuerza bruta)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiados intentos. Espera 15 minutos e intenta de nuevo.' },
+});
+
 // Rutas
+app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth', authRoutes);
 
 // Ping

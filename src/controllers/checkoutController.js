@@ -35,7 +35,9 @@ const checkout = async (req, res) => {
 
     const merchantId = process.env.OPENPAY_MERCHANT_ID;
     const privateKey = process.env.OPENPAY_PRIVATE_KEY;
-    const url = `https://sandbox-api.openpay.mx/v1/${merchantId}/charges`;
+    // Para pasar a producción basta definir OPENPAY_BASE_URL=https://api.openpay.mx en el .env
+    const baseUrl = process.env.OPENPAY_BASE_URL || 'https://sandbox-api.openpay.mx';
+    const url = `${baseUrl}/v1/${merchantId}/charges`;
 
     const cargo = await axios.post(url, {
       source_id: token_id,
