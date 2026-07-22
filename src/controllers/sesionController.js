@@ -1,6 +1,13 @@
+// ============================================================================
+// Controlador de Sesiones / Agenda
+// ----------------------------------------------------------------------------
+// Mismo patrón CRUD que eventoController: listar/obtener son públicos y
+// crear/actualizar/eliminar quedan restringidos a admin en las rutas.
+// ============================================================================
 const Sesion = require('../models/sesionModel');
 const { createSesion } = Sesion;
 
+// Devuelve todas las sesiones de la agenda (orden cronológico).
 const listar = async (req, res) => {
   try {
     const sesiones = await Sesion.getAll();
@@ -10,6 +17,7 @@ const listar = async (req, res) => {
   }
 };
 
+// Devuelve una sesión por id; 404 si no existe.
 const obtener = async (req, res) => {
   try {
     const sesion = await Sesion.getById(req.params.id);
@@ -20,6 +28,7 @@ const obtener = async (req, res) => {
   }
 };
 
+// Crea una sesión con los datos del cuerpo.
 const crear = async (req, res) => {
   try {
     const id = await createSesion(req.body);
@@ -30,6 +39,7 @@ const crear = async (req, res) => {
   }
 };
 
+// Actualiza una sesión; 404 si el id no existe.
 const actualizar = async (req, res) => {
   try {
     const filas = await Sesion.update(req.params.id, req.body);
@@ -40,6 +50,7 @@ const actualizar = async (req, res) => {
   }
 };
 
+// Elimina una sesión; 404 si el id no existe.
 const eliminar = async (req, res) => {
   try {
     const filas = await Sesion.remove(req.params.id);

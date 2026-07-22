@@ -1,6 +1,13 @@
+// ============================================================================
+// Controlador de Artículos
+// ----------------------------------------------------------------------------
+// Mismo patrón CRUD que eventoController: listar/obtener son públicos y
+// crear/actualizar/eliminar quedan restringidos a admin en las rutas.
+// ============================================================================
 const Articulo = require('../models/articuloModel');
 const { createArticulo } = Articulo;
 
+// Devuelve todos los artículos.
 const listar = async (req, res) => {
   try {
     const articulos = await Articulo.getAll();
@@ -10,6 +17,7 @@ const listar = async (req, res) => {
   }
 };
 
+// Devuelve un artículo por id; 404 si no existe.
 const obtener = async (req, res) => {
   try {
     const articulo = await Articulo.getById(req.params.id);
@@ -20,6 +28,7 @@ const obtener = async (req, res) => {
   }
 };
 
+// Crea un artículo con los datos del cuerpo.
 const crear = async (req, res) => {
   try {
     const id = await createArticulo(req.body);
@@ -30,6 +39,7 @@ const crear = async (req, res) => {
   }
 };
 
+// Actualiza un artículo; 404 si el id no existe.
 const actualizar = async (req, res) => {
   try {
     const filas = await Articulo.update(req.params.id, req.body);
@@ -40,6 +50,7 @@ const actualizar = async (req, res) => {
   }
 };
 
+// Elimina un artículo; 404 si el id no existe.
 const eliminar = async (req, res) => {
   try {
     const filas = await Articulo.remove(req.params.id);

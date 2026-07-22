@@ -1,3 +1,11 @@
+// ============================================================================
+// Controlador de Autenticación
+// ----------------------------------------------------------------------------
+// Maneja el inicio de sesión y el registro. Las contraseñas se guardan con
+// hash bcrypt (nunca en texto plano) y la sesión se representa con un JWT que
+// expira a las 8 horas. Al registrarse con el correo de una cuenta "invitada"
+// (creada al comprar sin registro), esa cuenta se reclama y conserva sus compras.
+// ============================================================================
 const bcrypt    = require('bcryptjs');
 const jwt       = require('jsonwebtoken');
 const Usuario   = require('../models/usuarioModel');

@@ -1,6 +1,13 @@
+// ============================================================================
+// Controlador de Speakers / Ponentes
+// ----------------------------------------------------------------------------
+// Mismo patrón CRUD que eventoController: listar/obtener son públicos y
+// crear/actualizar/eliminar quedan restringidos a admin en las rutas.
+// ============================================================================
 const Speaker = require('../models/speakerModel');
 const { createSpeaker } = Speaker;
 
+// Devuelve todos los ponentes (destacados primero).
 const listar = async (req, res) => {
   try {
     const speakers = await Speaker.getAll();
@@ -10,6 +17,7 @@ const listar = async (req, res) => {
   }
 };
 
+// Devuelve un ponente por id; 404 si no existe.
 const obtener = async (req, res) => {
   try {
     const speaker = await Speaker.getById(req.params.id);
@@ -20,6 +28,7 @@ const obtener = async (req, res) => {
   }
 };
 
+// Crea un ponente con los datos del cuerpo.
 const crear = async (req, res) => {
   try {
     const id = await createSpeaker(req.body);
@@ -30,6 +39,7 @@ const crear = async (req, res) => {
   }
 };
 
+// Actualiza un ponente; 404 si el id no existe.
 const actualizar = async (req, res) => {
   try {
     const filas = await Speaker.update(req.params.id, req.body);
@@ -40,6 +50,7 @@ const actualizar = async (req, res) => {
   }
 };
 
+// Elimina un ponente; 404 si el id no existe.
 const eliminar = async (req, res) => {
   try {
     const filas = await Speaker.remove(req.params.id);

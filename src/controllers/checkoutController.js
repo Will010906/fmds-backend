@@ -1,3 +1,15 @@
+// ============================================================================
+// Controlador de Checkout (cobro con Openpay)
+// ----------------------------------------------------------------------------
+// Recibe el token de la tarjeta que el frontend generó con Openpay (la tarjeta
+// nunca pasa por este servidor) y ejecuta el cargo contra la API de Openpay con
+// la llave privada. Soporta dos casos:
+//   - Usuario con sesión: se cobra a su cuenta.
+//   - Invitado (sin sesión): se crea/reutiliza una cuenta "invitada" por correo,
+//     que luego puede reclamarse al registrarse con ese mismo correo.
+// Si el cobro es exitoso, registra la transacción y descuenta el stock de boletos.
+// La URL de Openpay (sandbox vs producción) sale de OPENPAY_BASE_URL.
+// ============================================================================
 const axios = require('axios');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');

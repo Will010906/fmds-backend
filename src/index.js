@@ -1,7 +1,14 @@
+// ============================================================================
+// Punto de entrada del servidor (API REST del backend FMDS)
+// ----------------------------------------------------------------------------
+// Configura Express, la seguridad (helmet, CORS, rate limit) y monta todas las
+// rutas bajo /api/*. Al arrancar, verifica la conexión con MySQL y queda a la
+// escucha en el puerto definido por la variable PORT (o 3000 en local).
+// ============================================================================
 const express    = require('express');
 const cors       = require('cors');
-const helmet     = require('helmet');
-const rateLimit  = require('express-rate-limit');
+const helmet     = require('helmet');       // Cabeceras de seguridad HTTP
+const rateLimit  = require('express-rate-limit'); // Límite de intentos (anti fuerza bruta)
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');

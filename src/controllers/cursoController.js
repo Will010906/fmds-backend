@@ -1,6 +1,13 @@
+// ============================================================================
+// Controlador de Cursos
+// ----------------------------------------------------------------------------
+// Mismo patrón CRUD que eventoController: listar/obtener son públicos y
+// crear/actualizar/eliminar quedan restringidos a admin en las rutas.
+// ============================================================================
 const Curso = require('../models/cursoModel');
 const { createCurso } = Curso;
 
+// Devuelve todos los cursos.
 const listar = async (req, res) => {
   try {
     const cursos = await Curso.getAll();
@@ -10,6 +17,7 @@ const listar = async (req, res) => {
   }
 };
 
+// Devuelve un curso por id; 404 si no existe.
 const obtener = async (req, res) => {
   try {
     const curso = await Curso.getById(req.params.id);
@@ -20,6 +28,7 @@ const obtener = async (req, res) => {
   }
 };
 
+// Crea un curso con los datos del cuerpo.
 const crear = async (req, res) => {
   try {
     const id = await createCurso(req.body);
@@ -30,6 +39,7 @@ const crear = async (req, res) => {
   }
 };
 
+// Actualiza un curso; 404 si el id no existe.
 const actualizar = async (req, res) => {
   try {
     const filas = await Curso.update(req.params.id, req.body);
@@ -40,6 +50,7 @@ const actualizar = async (req, res) => {
   }
 };
 
+// Elimina un curso; 404 si el id no existe.
 const eliminar = async (req, res) => {
   try {
     const filas = await Curso.remove(req.params.id);

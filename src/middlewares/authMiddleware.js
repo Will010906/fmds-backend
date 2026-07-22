@@ -1,3 +1,14 @@
+// ============================================================================
+// Middlewares de autenticación y autorización
+// ----------------------------------------------------------------------------
+// Se ejecutan ANTES del controlador en las rutas protegidas:
+//   verificarToken -> exige un JWT válido; si lo es, deja los datos del usuario
+//                     en req.usuario para que el controlador los use.
+//   soloAdmin      -> se usa después de verificarToken; exige rol Administrador.
+//   tokenOpcional  -> intenta identificar al usuario pero no bloquea si no hay
+//                     token (para el checkout, que acepta invitados).
+// El JWT se envía en la cabecera:  Authorization: Bearer <token>
+// ============================================================================
 const jwt = require('jsonwebtoken');
 
 const verificarToken = (req, res, next) => {
