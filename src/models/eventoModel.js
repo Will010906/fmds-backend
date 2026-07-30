@@ -18,13 +18,24 @@ const getById = async (id) => {
   return rows[0];
 };
 
+// Los campos descriptivos son opcionales: si no vienen se guardan como null
+// (o con la modalidad por defecto) para no romper los eventos ya registrados.
+const normalizar = (datos) => ({
+  descripcion: datos.descripcion?.trim() || null,
+  sede:        datos.sede?.trim() || null,
+  ciudad:      datos.ciudad?.trim() || null,
+  hora:        datos.hora || null,
+  modalidad:   datos.modalidad || 'Presencial',
+});
+
 // Inserta un evento nuevo y devuelve el id generado.
 const createEvento = async (datos) => {
   const { titulo, fecha, precio, stockBoletos } = datos;
+  const d = normalizar(datos);
   const [result] = await db.query(
-    `INSERT INTO evento (titulo, fecha, precio, stockBoletos)
-     VALUES (?, ?, ?, ?)`,
-    [titulo, fecha, precio, stockBoletos]
+    `INSERT INTO evento (titulo, fecha, precio, stockBoletos, descripcion, sede, ciudad, hora, modalidad)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [titulo, fecha, precio, stockBoletos, d.descripcion, d.sede, d.ciudad, d.hora, d.modalidad]
   );
   return result.insertId;
 };
@@ -32,10 +43,12 @@ const createEvento = async (datos) => {
 // Actualiza un evento existente. Devuelve cuántas filas cambiaron.
 const update = async (id, datos) => {
   const { titulo, fecha, precio, stockBoletos } = datos;
+  const d = normalizar(datos);
   const [result] = await db.query(
-    `UPDATE evento SET titulo=?, fecha=?, precio=?, stockBoletos=?
+    `UPDATE evento SET titulo=?, fecha=?, precio=?, stockBoletos=?,
+            descripcion=?, sede=?, ciudad=?, hora=?, modalidad=?
      WHERE idEvento=?`,
-    [titulo, fecha, precio, stockBoletos, id]
+    [titulo, fecha, precio, stockBoletos, d.descripcion, d.sede, d.ciudad, d.hora, d.modalidad, id]
   );
   return result.affectedRows;
 };
