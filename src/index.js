@@ -77,9 +77,13 @@ app.use('/api/transacciones', transaccionRoutes);
 const checkoutRoutes = require('./routes/checkoutRoutes');
 app.use('/api/checkout', checkoutRoutes);
 
-// Verificar MySQL
+// Verificar MySQL y, si la conexión funciona, poner al día el esquema
+const ejecutarMigraciones = require('./config/migraciones');
 db.query('SELECT 1')
-  .then(() => console.log('MySQL conectado ✅'))
+  .then(() => {
+    console.log('MySQL conectado ✅');
+    return ejecutarMigraciones();
+  })
   .catch(err => console.error('Error MySQL ❌', err.message));
 
 const PORT = process.env.PORT || 3000;
