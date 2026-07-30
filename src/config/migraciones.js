@@ -12,6 +12,19 @@
 // ============================================================================
 const db = require('./db');
 
+// Tablas que deben existir. Se crean con IF NOT EXISTS, así que volver a
+// ejecutarlas no afecta a las que ya tienen información.
+const TABLAS_ESPERADAS = {
+  mensaje: `CREATE TABLE IF NOT EXISTS mensaje (
+    idMensaje INT AUTO_INCREMENT PRIMARY KEY,
+    nombre    VARCHAR(150) NOT NULL,
+    correo    VARCHAR(150) NOT NULL,
+    asunto    VARCHAR(60)  NOT NULL DEFAULT 'Consulta general',
+    mensaje   TEXT NOT NULL,
+    creadoEn  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  ) ENGINE=InnoDB`,
+};
+
 // Columnas esperadas por tabla: { tabla: { columna: definición SQL } }
 const COLUMNAS_ESPERADAS = {
   evento: {
@@ -24,6 +37,22 @@ const COLUMNAS_ESPERADAS = {
 };
 
 const ejecutarMigraciones = async () => {
+  // 1) Tablas faltantes
+  for (const [tabla, sql] of Object.entries(TABLAS_ESPERADAS)) {
+    try {
+      const [antes] = await db.query(
+        `SELECT COUNT(*) AS n FROM INFORMATION_SCHEMA.TABLES
+         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?`,
+        [tabla]
+      );
+      await db.query(sql);
+      if (antes[0].n === 0) console.log(`Migración: tabla ${tabla} creada ✅`);
+    } catch (err) {
+      console.error(`Migración: no se pudo crear la tabla ${tabla} ❌`, err.message);
+    }
+  }
+
+  // 2) Columnas faltantes
   for (const [tabla, columnas] of Object.entries(COLUMNAS_ESPERADAS)) {
     try {
       const [existentes] = await db.query(
