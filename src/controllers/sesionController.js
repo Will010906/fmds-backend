@@ -7,10 +7,18 @@
 const Sesion = require('../models/sesionModel');
 const { createSesion } = Sesion;
 
-// Devuelve todas las sesiones de la agenda (orden cronológico).
+// Devuelve las sesiones de la agenda en orden cronológico.
+// Admite dos filtros por query string, que es lo que consumen la página de
+// agenda (?idEvento=) y la ficha de cada ponente (?idSpeaker=).
 const listar = async (req, res) => {
   try {
-    const sesiones = await Sesion.getAll();
+    const { idEvento, idSpeaker } = req.query;
+
+    let sesiones;
+    if (idSpeaker) sesiones = await Sesion.getPorSpeaker(idSpeaker);
+    else if (idEvento) sesiones = await Sesion.getPorEvento(idEvento);
+    else sesiones = await Sesion.getAll();
+
     res.json(sesiones);
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener sesiones' });

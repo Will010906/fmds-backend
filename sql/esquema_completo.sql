@@ -98,13 +98,19 @@ CREATE TABLE IF NOT EXISTS suscriptor (
 --    badge: Keynote | Workshop | Panel | Social)
 CREATE TABLE IF NOT EXISTS sesion (
     idSesion  INT AUTO_INCREMENT PRIMARY KEY,
+    idEvento  INT NULL,          -- a que congreso pertenece esta sesion
+    idSpeaker INT NULL,          -- ponente del catalogo, si lo imparte una persona registrada
     dia       INT NOT NULL,
     hora      TIME NOT NULL,
     duracion  VARCHAR(20) NOT NULL,
     tipo      VARCHAR(60) NOT NULL,
     nombre    VARCHAR(255) NOT NULL,
+    -- Texto libre para lo que no es una persona del catalogo: paneles,
+    -- comites y actividades abiertas a todos los asistentes.
     ponente   VARCHAR(150) NOT NULL,
-    badge     VARCHAR(20) NOT NULL DEFAULT 'Keynote'
+    badge     VARCHAR(20) NOT NULL DEFAULT 'Keynote',
+    CONSTRAINT FK_sesion_evento  FOREIGN KEY (idEvento)  REFERENCES evento(idEvento)   ON DELETE SET NULL,
+    CONSTRAINT FK_sesion_speaker FOREIGN KEY (idSpeaker) REFERENCES speaker(idSpeaker) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- 9. TABLA: curso (catalogo de formacion en linea;

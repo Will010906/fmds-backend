@@ -47,6 +47,14 @@ const COLUMNAS_ESPERADAS = {
     hora:        'TIME NULL',
     modalidad:   "VARCHAR(30) NOT NULL DEFAULT 'Presencial'",
   },
+  // Una sesión pertenece a un evento y puede impartirla un ponente del
+  // catálogo. Ambas admiten nulos: la agenda existía antes que estas
+  // relaciones, y no toda sesión la da una persona registrada (hay paneles,
+  // comités y actividades abiertas que siguen usando el texto libre).
+  sesion: {
+    idEvento:  'INT NULL',
+    idSpeaker: 'INT NULL',
+  },
 };
 
 const ejecutarMigraciones = async () => {
