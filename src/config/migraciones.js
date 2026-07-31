@@ -23,6 +23,19 @@ const TABLAS_ESPERADAS = {
     mensaje   TEXT NOT NULL,
     creadoEn  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   ) ENGINE=InnoDB`,
+
+  paquete: `CREATE TABLE IF NOT EXISTS paquete (
+    idPaquete       INT AUTO_INCREMENT PRIMARY KEY,
+    idEvento        INT NOT NULL,
+    nombre          VARCHAR(100)  NOT NULL,
+    descripcion     VARCHAR(255)  NULL,
+    cantidadBoletos INT           NOT NULL,
+    precio          DECIMAL(10,2) NOT NULL,
+    destacado       TINYINT(1)    NOT NULL DEFAULT 0,
+    activo          TINYINT(1)    NOT NULL DEFAULT 1,
+    CONSTRAINT FK_paquete_evento FOREIGN KEY (idEvento)
+      REFERENCES evento(idEvento) ON DELETE CASCADE
+  ) ENGINE=InnoDB`,
 };
 
 // Columnas esperadas por tabla: { tabla: { columna: definición SQL } }

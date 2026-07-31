@@ -118,3 +118,21 @@ CREATE TABLE IF NOT EXISTS curso (
     descripcion TEXT NOT NULL,
     badge       VARCHAR(20) NULL
 ) ENGINE=InnoDB;
+
+-- 10. TABLA: paquete (conjunto de boletos de un evento con precio propio,
+--     menor que comprar esos boletos por separado. El ahorro no se guarda:
+--     se calcula contra evento.precio para que nunca quede desfasado)
+CREATE TABLE IF NOT EXISTS paquete (
+    idPaquete       INT AUTO_INCREMENT PRIMARY KEY,
+    idEvento        INT NOT NULL,
+    nombre          VARCHAR(100)  NOT NULL,
+    descripcion     VARCHAR(255)  NULL,
+    cantidadBoletos INT           NOT NULL,
+    precio          DECIMAL(10,2) NOT NULL,
+    destacado       TINYINT(1)    NOT NULL DEFAULT 0,
+    activo          TINYINT(1)    NOT NULL DEFAULT 1,
+    CONSTRAINT FK_paquete_evento FOREIGN KEY (idEvento)
+        REFERENCES evento(idEvento) ON DELETE CASCADE,
+    CONSTRAINT CHK_paquete_cantidad CHECK (cantidadBoletos >= 2),
+    CONSTRAINT CHK_paquete_precio   CHECK (precio > 0)
+) ENGINE=InnoDB;

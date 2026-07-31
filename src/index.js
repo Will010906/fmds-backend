@@ -80,6 +80,9 @@ app.use('/api/checkout', checkoutRoutes);
 const mensajeRoutes = require('./routes/mensajeRoutes');
 app.use('/api/mensajes', mensajeRoutes);
 
+const paqueteRoutes = require('./routes/paqueteRoutes');
+app.use('/api/paquetes', paqueteRoutes);
+
 // Verificar MySQL y, si la conexión funciona, poner al día el esquema
 const ejecutarMigraciones = require('./config/migraciones');
 db.query('SELECT 1')

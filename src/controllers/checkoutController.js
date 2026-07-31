@@ -9,21 +9,61 @@
 //     que luego puede reclamarse al registrarse con ese mismo correo.
 // Si el cobro es exitoso, registra la transacción y descuenta el stock de boletos.
 // La URL de Openpay (sandbox vs producción) sale de OPENPAY_BASE_URL.
+//
+// El importe NO se toma del cuerpo de la petición: se calcula aquí a partir del
+// precio guardado en la base de datos. De lo contrario cualquiera podría editar
+// la petición desde el navegador y pagar la cantidad que quisiera.
 // ============================================================================
 const axios = require('axios');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const Transaccion = require('../models/transaccionModel');
 const Usuario = require('../models/usuarioModel');
+const Evento = require('../models/eventoModel');
+const Paquete = require('../models/paqueteModel');
+
+// Resuelve qué se está comprando y cuánto cuesta, siempre según la base de
+// datos. Devuelve { idEvento, cantidad, monto } o { error }.
+// - Con idPaquete: el precio y la cantidad de boletos salen del paquete.
+// - Sin idPaquete: se cobra el precio del evento por la cantidad pedida.
+const resolverCompra = async ({ idPaquete, idEvento, cantidad }) => {
+  if (idPaquete) {
+    const paquete = await Paquete.getById(idPaquete);
+    if (!paquete) return { error: 'El paquete indicado no existe' };
+    if (!paquete.activo) return { error: 'Ese paquete ya no está disponible' };
+    return {
+      idEvento: paquete.idEvento,
+      cantidad: paquete.cantidadBoletos,
+      monto: Number(paquete.precio),
+    };
+  }
+
+  const unidades = Number(cantidad);
+  if (!Number.isInteger(unidades) || unidades < 1) {
+    return { error: 'La cantidad de boletos no es válida' };
+  }
+
+  const evento = await Evento.getById(idEvento);
+  if (!evento) return { error: 'El evento indicado no existe' };
+
+  return {
+    idEvento: evento.idEvento,
+    cantidad: unidades,
+    monto: Number((Number(evento.precio) * unidades).toFixed(2)),
+  };
+};
 
 const checkout = async (req, res) => {
-  const { token_id, idEvento, cantidad, montoTotal, deviceSessionId, nombre, correo } = req.body;
+  const { token_id, idEvento, cantidad, idPaquete, deviceSessionId, nombre, correo } = req.body;
 
-  if (!token_id || !idEvento || !cantidad || !montoTotal) {
+  if (!token_id || (!idPaquete && (!idEvento || !cantidad))) {
     return res.status(400).json({ error: 'Faltan datos requeridos' });
   }
 
   try {
+    const compra = await resolverCompra({ idPaquete, idEvento, cantidad });
+    if (compra.error) return res.status(400).json({ error: compra.error });
+
     let usuario;
 
     if (req.usuario) {
@@ -54,9 +94,9 @@ const checkout = async (req, res) => {
     const cargo = await axios.post(url, {
       source_id: token_id,
       method: 'card',
-      amount: montoTotal,
+      amount: compra.monto,
       currency: 'MXN',
-      description: `Boletos FMDS - Evento ${idEvento}`,
+      description: `Boletos FMDS - Evento ${compra.idEvento} (${compra.cantidad})`,
       device_session_id: deviceSessionId,
       customer: {
         name: usuario.nombre,
@@ -71,13 +111,15 @@ const checkout = async (req, res) => {
 
     const idTransaccion = await Transaccion.createTransaccion(
       usuario.idUsuario,
-      montoTotal,
-      [{ idEvento, cantidad }]
+      compra.monto,
+      [{ idEvento: compra.idEvento, cantidad: compra.cantidad }]
     );
 
     res.status(201).json({
       message: 'Pago exitoso',
       idTransaccion,
+      montoCobrado: compra.monto,
+      cantidad: compra.cantidad,
       openpay_id: cargo.data.id,
       status: cargo.data.status,
     });
