@@ -11,7 +11,6 @@ const ASUNTOS_VALIDOS = [
   'Consulta general',
   'Propuesta de ponencia',
   'Publicar artículo',
-  'Hackathon',
   'Alianzas y patrocinios',
 ];
 
