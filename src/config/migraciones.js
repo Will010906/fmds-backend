@@ -57,6 +57,35 @@ const COLUMNAS_ESPERADAS = {
   },
 };
 
+// Enlaza por única vez las sesiones ya cargadas con su ponente del catálogo.
+//
+// La agenda se capturó antes de que existiera la relación, con el ponente como
+// texto libre ("Dra. Ana López · TEC de Monterrey"). Aquí se liga cada sesión
+// cuyo texto contenga el nombre completo de un ponente registrado.
+//
+// Se exige el nombre completo, no el apellido, justamente para no confundir a
+// dos personas que comparten apellido. Y solo se ejecuta si ninguna sesión
+// tiene ponente asignado: en cuanto alguien empieza a asignarlos desde el
+// panel, esta función deja de tocar nada para no deshacer su trabajo.
+const enlazarPonentesUnaVez = async () => {
+  try {
+    const [[{ n }]] = await db.query('SELECT COUNT(*) AS n FROM sesion WHERE idSpeaker IS NOT NULL');
+    if (n > 0) return; // ya hay asignaciones hechas a mano: no se toca
+
+    const [enlazadas] = await db.query(`
+      UPDATE sesion s
+      JOIN speaker sp ON s.ponente LIKE CONCAT('%', sp.nombre, '%')
+      SET s.idSpeaker = sp.idSpeaker
+      WHERE s.idSpeaker IS NULL
+    `);
+    if (enlazadas.affectedRows > 0) {
+      console.log(`Migración: ${enlazadas.affectedRows} sesiones enlazadas con su ponente ✅`);
+    }
+  } catch (err) {
+    console.error('Migración: no se pudieron enlazar los ponentes ❌', err.message);
+  }
+};
+
 const ejecutarMigraciones = async () => {
   // 1) Tablas faltantes
   for (const [tabla, sql] of Object.entries(TABLAS_ESPERADAS)) {
@@ -95,6 +124,9 @@ const ejecutarMigraciones = async () => {
       console.error(`Migración: no se pudo actualizar la tabla ${tabla} ❌`, err.message);
     }
   }
+
+  // 3) Enlace inicial de la agenda con el catálogo de ponentes
+  await enlazarPonentesUnaVez();
 };
 
 module.exports = ejecutarMigraciones;
