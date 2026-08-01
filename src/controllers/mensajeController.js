@@ -10,7 +10,6 @@ const Mensaje = require('../models/mensajeModel');
 const ASUNTOS_VALIDOS = [
   'Consulta general',
   'Propuesta de ponencia',
-  'Publicar artículo',
   'Alianzas y patrocinios',
 ];
 
