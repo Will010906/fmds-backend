@@ -17,16 +17,26 @@ const db         = require('./config/db');
 const app = express();
 app.set('trust proxy', 1); // Railway corre detrás de un proxy
 
-// 1. Configuración de CORS permitiendo preflight explícito
+// 1. CORS. El frontend vive en otro dominio (Vercel), así que el navegador
+//    manda una petición OPTIONS de comprobación antes de cada llamada.
+//
+//    No se registra una ruta aparte para OPTIONS: el middleware de cors ya
+//    responde a esas peticiones por su cuenta. Además, en Express 5 el comodín
+//    '*' dejó de ser una ruta válida y `app.options('*', ...)` revienta al
+//    arrancar con "Missing parameter name", lo que deja el servidor sin
+//    levantar y la API entera devolviendo 404.
+//
+//    `credentials` va en false porque el origen es '*': el navegador rechaza
+//    la combinación de comodín con credenciales, y aquí no hacen falta porque
+//    la sesión viaja en la cabecera Authorization, no en cookies.
 const corsOptions = {
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  credentials: true
+  credentials: false,
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Responde a las peticiones OPTIONS preflight de inmediato
 
 // 2. Helmet con políticas relajadas para cross-origin
 app.use(helmet({
