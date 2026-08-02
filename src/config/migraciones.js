@@ -138,7 +138,27 @@ const TABLAS_ESPERADAS = {
 };
 
 // Columnas esperadas por tabla: { tabla: { columna: definición SQL } }
+//
+// Aquí van las columnas que el código lee, no solo las que se agregaron con
+// el tiempo. Una base importada de otro lado puede traer la tabla con menos
+// columnas de las que las consultas piden, y el resultado es un 500 opaco:
+// la tabla existe, así que nada avisa de que le falta algo.
 const COLUMNAS_ESPERADAS = {
+  // La cuenta creada al comprar sin registro se marca como invitada para
+  // poder reclamarla luego con el mismo correo.
+  usuario: {
+    esInvitado: 'TINYINT(1) NOT NULL DEFAULT 0',
+  },
+  // fotoUrl es opcional en la ficha del ponente, pero las consultas de la
+  // agenda la piden por nombre para mostrar su retrato junto a la sesión.
+  speaker: {
+    fotoUrl:  'VARCHAR(500) NULL',
+    frase:    'TEXT NULL',
+    featured: 'TINYINT(1) NOT NULL DEFAULT 0',
+  },
+  curso: {
+    badge: 'VARCHAR(20) NULL',
+  },
   evento: {
     descripcion: 'TEXT NULL',
     sede:        'VARCHAR(150) NULL',
