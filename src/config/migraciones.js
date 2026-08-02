@@ -14,7 +14,106 @@ const db = require('./db');
 
 // Tablas que deben existir. Se crean con IF NOT EXISTS, así que volver a
 // ejecutarlas no afecta a las que ya tienen información.
+//
+// Están todas, no solo las nuevas: al mover el proyecto a otra cuenta de
+// Railway la base arranca vacía, y si el código da por hecho que las tablas
+// ya existen, los endpoints responden 500 hasta que alguien ejecute el SQL a
+// mano. Con la lista completa, apuntar a una base nueva basta para que el
+// esquema se levante solo en el primer arranque.
+//
+// El orden importa: una tabla con clave foránea necesita que la tabla a la
+// que apunta ya exista, y los objetos de JavaScript conservan el orden en que
+// se escriben las claves.
 const TABLAS_ESPERADAS = {
+  usuario: `CREATE TABLE IF NOT EXISTS usuario (
+    idUsuario   INT AUTO_INCREMENT PRIMARY KEY,
+    nombre      VARCHAR(150) NOT NULL,
+    correo      VARCHAR(100) NOT NULL UNIQUE,
+    contrasenia VARCHAR(255) NOT NULL,
+    rol         VARCHAR(30) NOT NULL DEFAULT 'Usuario General',
+    esInvitado  TINYINT(1) NOT NULL DEFAULT 0
+  ) ENGINE=InnoDB`,
+
+  evento: `CREATE TABLE IF NOT EXISTS evento (
+    idEvento     INT AUTO_INCREMENT PRIMARY KEY,
+    titulo       VARCHAR(200) NOT NULL,
+    fecha        DATE NOT NULL,
+    precio       FLOAT NOT NULL,
+    stockBoletos INT NOT NULL
+  ) ENGINE=InnoDB`,
+
+  transaccion: `CREATE TABLE IF NOT EXISTS transaccion (
+    idTransaccion VARCHAR(50) PRIMARY KEY,
+    idUsuario     INT NOT NULL,
+    fechaPago     DATETIME NOT NULL,
+    montoTotal    FLOAT NOT NULL,
+    CONSTRAINT FK_transaccion_usuario FOREIGN KEY (idUsuario)
+      REFERENCES usuario (idUsuario) ON DELETE RESTRICT ON UPDATE CASCADE
+  ) ENGINE=InnoDB`,
+
+  detalle_compra: `CREATE TABLE IF NOT EXISTS detalle_compra (
+    idDetalle     INT AUTO_INCREMENT PRIMARY KEY,
+    idTransaccion VARCHAR(50) NOT NULL,
+    idEvento      INT NOT NULL,
+    cantidad      INT NOT NULL,
+    CONSTRAINT FK_detalle_transaccion FOREIGN KEY (idTransaccion)
+      REFERENCES transaccion (idTransaccion) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT FK_detalle_evento FOREIGN KEY (idEvento)
+      REFERENCES evento (idEvento) ON DELETE RESTRICT ON UPDATE CASCADE
+  ) ENGINE=InnoDB`,
+
+  articulo: `CREATE TABLE IF NOT EXISTS articulo (
+    idArticulo       INT AUTO_INCREMENT PRIMARY KEY,
+    titulo           VARCHAR(255) NOT NULL,
+    cuerpo           TEXT NOT NULL,
+    autor            VARCHAR(150) NOT NULL,
+    categoria        VARCHAR(100) NOT NULL,
+    fechaPublicacion DATE NOT NULL
+  ) ENGINE=InnoDB`,
+
+  speaker: `CREATE TABLE IF NOT EXISTS speaker (
+    idSpeaker INT AUTO_INCREMENT PRIMARY KEY,
+    nombre    VARCHAR(150) NOT NULL,
+    rol       VARCHAR(150) NOT NULL,
+    area      VARCHAR(60)  NOT NULL,
+    tema      VARCHAR(255) NOT NULL,
+    frase     TEXT NULL,
+    featured  TINYINT(1) NOT NULL DEFAULT 0,
+    fotoUrl   VARCHAR(500) NULL,
+    creadoEn  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  ) ENGINE=InnoDB`,
+
+  suscriptor: `CREATE TABLE IF NOT EXISTS suscriptor (
+    idSuscriptor INT AUTO_INCREMENT PRIMARY KEY,
+    correo       VARCHAR(150) NOT NULL UNIQUE,
+    creadoEn     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  ) ENGINE=InnoDB`,
+
+  sesion: `CREATE TABLE IF NOT EXISTS sesion (
+    idSesion  INT AUTO_INCREMENT PRIMARY KEY,
+    idEvento  INT NULL,
+    idSpeaker INT NULL,
+    dia       INT NOT NULL,
+    hora      TIME NOT NULL,
+    duracion  VARCHAR(20) NOT NULL,
+    tipo      VARCHAR(60) NOT NULL,
+    nombre    VARCHAR(255) NOT NULL,
+    ponente   VARCHAR(150) NOT NULL,
+    badge     VARCHAR(20) NOT NULL DEFAULT 'Keynote',
+    CONSTRAINT FK_sesion_evento  FOREIGN KEY (idEvento)  REFERENCES evento(idEvento)   ON DELETE SET NULL,
+    CONSTRAINT FK_sesion_speaker FOREIGN KEY (idSpeaker) REFERENCES speaker(idSpeaker) ON DELETE SET NULL
+  ) ENGINE=InnoDB`,
+
+  curso: `CREATE TABLE IF NOT EXISTS curso (
+    idCurso     INT AUTO_INCREMENT PRIMARY KEY,
+    nombre      VARCHAR(150) NOT NULL,
+    horas       INT NOT NULL,
+    nivel       VARCHAR(50) NOT NULL,
+    precio      DECIMAL(10,2) NOT NULL,
+    descripcion TEXT NOT NULL,
+    badge       VARCHAR(20) NULL
+  ) ENGINE=InnoDB`,
+
   mensaje: `CREATE TABLE IF NOT EXISTS mensaje (
     idMensaje INT AUTO_INCREMENT PRIMARY KEY,
     nombre    VARCHAR(150) NOT NULL,
