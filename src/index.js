@@ -17,14 +17,18 @@ const db         = require('./config/db');
 const app = express();
 app.set('trust proxy', 1); // Railway corre detrás de un proxy
 
-// Configuración flexible de CORS para Vercel y desarrollo local
-app.use(cors({
+// 1. Configuración de CORS permitiendo preflight explícito
+const corsOptions = {
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true
+};
 
-// Configuración de Helmet sin bloquear peticiones entre dominios (Cross-Origin)
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Responde a las peticiones OPTIONS preflight de inmediato
+
+// 2. Helmet con políticas relajadas para cross-origin
 app.use(helmet({
   crossOriginResourcePolicy: false,
   crossOriginOpenerPolicy: false
@@ -32,12 +36,13 @@ app.use(helmet({
 
 app.use(express.json());
 
-// Máximo 10 intentos de login por IP cada 15 minutos (contra fuerza bruta)
+// 3. Rate Limiting ignorando peticiones OPTIONS
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS', // Salta el limitador si es preflight
   message: { error: 'Demasiados intentos. Espera 15 minutos e intenta de nuevo.' },
 });
 
