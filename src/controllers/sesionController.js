@@ -21,6 +21,10 @@ const listar = async (req, res) => {
 
     res.json(sesiones);
   } catch (err) {
+    // Se registra el error real: al cliente se le devuelve un mensaje genérico
+    // para no filtrar detalles de la base, pero sin esta traza un fallo de
+    // esquema en el servidor es indistinguible de cualquier otro.
+    console.error('ERROR LISTAR SESIONES:', err.message);
     res.status(500).json({ error: 'Error al obtener sesiones' });
   }
 };

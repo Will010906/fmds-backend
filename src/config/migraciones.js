@@ -150,9 +150,22 @@ const COLUMNAS_ESPERADAS = {
   // catálogo. Ambas admiten nulos: la agenda existía antes que estas
   // relaciones, y no toda sesión la da una persona registrada (hay paneles,
   // comités y actividades abiertas que siguen usando el texto libre).
+  //
+  // Se listan además las columnas de contenido. Al mover el proyecto de
+  // cuenta apareció una base cuya tabla `sesion` no coincidía con la que el
+  // código espera, y cualquier consulta a la agenda respondía 500. Con la
+  // lista completa, una tabla incompleta se termina de armar sola. Los
+  // valores por defecto permiten agregarlas aunque ya haya filas dentro.
   sesion: {
     idEvento:  'INT NULL',
     idSpeaker: 'INT NULL',
+    dia:       'INT NOT NULL DEFAULT 1',
+    hora:      "TIME NOT NULL DEFAULT '09:00:00'",
+    duracion:  "VARCHAR(20) NOT NULL DEFAULT '60 min'",
+    tipo:      "VARCHAR(60) NOT NULL DEFAULT 'Sesión'",
+    nombre:    "VARCHAR(255) NOT NULL DEFAULT ''",
+    ponente:   "VARCHAR(150) NOT NULL DEFAULT ''",
+    badge:     "VARCHAR(20) NOT NULL DEFAULT 'Keynote'",
   },
 };
 
@@ -171,9 +184,15 @@ const enlazarPonentesUnaVez = async () => {
     const [[{ n }]] = await db.query('SELECT COUNT(*) AS n FROM sesion WHERE idSpeaker IS NOT NULL');
     if (n > 0) return; // ya hay asignaciones hechas a mano: no se toca
 
+    // Las dos tablas pueden haberse creado con cotejamientos distintos
+    // (utf8mb4_0900_ai_ci en una y utf8mb4_unicode_ci en otra, según de dónde
+    // venga cada importación). MySQL se niega a comparar texto entre
+    // cotejamientos diferentes, así que se fuerza uno común en la comparación.
     const [enlazadas] = await db.query(`
       UPDATE sesion s
-      JOIN speaker sp ON s.ponente LIKE CONCAT('%', sp.nombre, '%')
+      JOIN speaker sp
+        ON (s.ponente COLLATE utf8mb4_general_ci)
+           LIKE (CONCAT('%', sp.nombre, '%') COLLATE utf8mb4_general_ci)
       SET s.idSpeaker = sp.idSpeaker
       WHERE s.idSpeaker IS NULL
     `);
