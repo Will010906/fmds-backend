@@ -16,12 +16,19 @@ const db         = require('./config/db');
 
 const app = express();
 app.set('trust proxy', 1); // Railway corre detrás de un proxy
-app.use(helmet());
+
+// Configuración flexible de CORS para Vercel y desarrollo local
 app.use(cors({
   origin: '*',
-  credentials: false,
-}))
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 
+// Configuración de Helmet sin bloquear peticiones entre dominios (Cross-Origin)
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+  crossOriginOpenerPolicy: false
+}));
 
 app.use(express.json());
 
@@ -50,7 +57,6 @@ app.get('/api/perfil', verificarToken, (req, res) => {
 });
 
 const eventoRoutes = require('./routes/eventoRoutes');
-// ...
 app.use('/api/eventos', eventoRoutes);
 
 const articuloRoutes = require('./routes/articuloRoutes');
