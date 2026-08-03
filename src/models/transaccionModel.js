@@ -67,12 +67,16 @@ const getByUsuario = async (idUsuario) => {
   return [...porFolio.values()];
 };
 
-const createTransaccion = async (idUsuario, montoTotal, detalles) => {
+// Registra la venta y descuenta el inventario dentro de una sola transacción
+// de base de datos: o quedan las dos cosas, o no queda ninguna.
+// `folio` es opcional; el checkout lo manda para que el id de la transacción
+// sea el mismo que el order_id enviado a Openpay y ambas puedan conciliarse.
+const createTransaccion = async (idUsuario, montoTotal, detalles, folio) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
 
-    const idTransaccion = `TXN-${Date.now()}`;
+    const idTransaccion = folio || `TXN-${Date.now()}`;
 
     await conn.query(
       `INSERT INTO transaccion (idTransaccion, idUsuario, fechaPago, montoTotal)
@@ -87,11 +91,21 @@ const createTransaccion = async (idUsuario, montoTotal, detalles) => {
         [idTransaccion, item.idEvento, item.cantidad]
       );
 
-      await conn.query(
+      const [descuento] = await conn.query(
         `UPDATE evento SET stockBoletos = stockBoletos - ?
          WHERE idEvento = ? AND stockBoletos >= ?`,
         [item.cantidad, item.idEvento, item.cantidad]
       );
+
+      // Cuando ya no hay boletos suficientes, la condición del WHERE no se
+      // cumple: MySQL no lanza ningún error, simplemente no toca ninguna fila.
+      // Sin esta comprobación la venta se guardaría igual y se venderían
+      // boletos que no existen.
+      if (descuento.affectedRows === 0) {
+        const err = new Error(`Sin inventario suficiente en el evento ${item.idEvento}`);
+        err.codigo = 'SIN_STOCK';
+        throw err;
+      }
     }
 
     await conn.commit();
